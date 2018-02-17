@@ -1,0 +1,27 @@
+{
+    "name": "crypto-data-collector",
+    "main": "crypto-data-collector.js",
+    "license": "MIT",
+    "dependencies": {
+        "arr-kv-table": "^0.0.1",
+        "bittrex-watcher": "^0.0.5",
+        "float64-kv-table": "^0.0.2",
+        "lang-mini": "^0.0.2",
+        "moment": "^2.20.1",
+        "my-config": "^2.0.0",
+        "nextleveldb-assets-client": "^0.0.19",
+        "nextleveldb-crypto-model": "^0.0.13",
+        "request": "^2.83.0",
+        "xas2": "^0.0.12"
+    },
+    "engines": {
+        "node": ">=6.5.0"
+    },
+    "description": "Crypto Data Collector",
+    "author": "James Vickers <james@metabench.com>",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/metabench/crypto-data-collector.git"
+    },
+    "version": "0.0.7"
+}
