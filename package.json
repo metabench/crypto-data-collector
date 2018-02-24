@@ -9,8 +9,8 @@
         "lang-mini": "^0.0.2",
         "moment": "^2.20.1",
         "my-config": "^2.0.0",
-        "nextleveldb-assets-client": "^0.0.19",
-        "nextleveldb-crypto-model": "^0.0.13",
+        "nextleveldb-assets-client": "^0.0.21",
+        "nextleveldb-crypto-model": "^0.0.14",
         "request": "^2.83.0",
         "xas2": "^0.0.12"
     },
@@ -23,5 +23,5 @@
         "type": "git",
         "url": "https://github.com/metabench/crypto-data-collector.git"
     },
-    "version": "0.0.7"
+    "version": "0.0.8"
 }

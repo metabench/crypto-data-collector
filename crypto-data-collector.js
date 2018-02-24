@@ -63,6 +63,25 @@ let delay = config.delay;
 // A more generalised data collector system?
 //  Includes DB table defs, functions to collect, and mapping to the db records.
 
+// Worth keeping this collecting for a while on a remote server.
+
+// Worth making a Bittrex Collector and also having a Collector_Base.
+//  The Collector would also check that the DB is set up correctly / ensure that it is.
+
+
+
+// Collector could be a basis, with various functions and variables that get plugged into it.
+
+
+// npm collector-base
+//  May be a bit declarative, could have some functions in the declaration.
+//  Ensure db structure
+//   including structure records
+//  Repeating processes
+//   Mapping results to declared table structure
+
+// Another version of this, but using a more generalised system, will work nicely.
+//  Repeated get data, then function to turn them into records to be added / ensured, then put them into the DB.
 
 
 //console.log('require.main', require.main);
@@ -73,7 +92,6 @@ if (require.main === module) {
     //  They will need to be batched up as records, and the Model will be useful for this.
 
     var bittrex_watcher = new Bittrex_Watcher();
-
     var server_data1 = config.nextleveldb_connections.localhost;
 
     /*
@@ -198,7 +216,6 @@ if (require.main === module) {
                         }
                     });
                 };
-
                 // First need to ensure the DB markets are up to date.=
 
                 var collect_market_summaries = () => {
@@ -223,11 +240,6 @@ if (require.main === module) {
 
                                 //console.log('market_key', market_key);
                                 if (!market_key) {
-
-
-
-
-
                                     throw 'Market ' + str_market_name + ' not found';
                                 }
                                 var res = [
@@ -239,6 +251,13 @@ if (require.main === module) {
 
                             var tbl_bittrex_snapshots = crypto_model_db.map_tables['bittrex market summary snapshots'];
                             //console.log('tbl_bittrex_snapshots.key_prefix', tbl_bittrex_snapshots.key_prefix);
+
+                            // client.put_table_records ...
+                            //  That would be a friendlier way of doing it.
+                            //   Encodes the records, then does the ll put
+                            //    Nice if it returned the keys of the put records once the puts have been confirmed.
+                            //     Could have a confirm put option?
+                            //      The DB could even do a get after the put to test its there? Overkill maybe.
 
                             var buf_encoded_records = crypto_model_db.encode_table_model_rows('bittrex market summary snapshots', arr_market_summary_records);
                             nldb_client.ll_put_records_buffer(buf_encoded_records, (err, res_put) => {
@@ -305,94 +324,6 @@ if (require.main === module) {
             }
             //wiping_start();
 
-            // May be superceded soon, making better use of functionality.
-            var ctu_start = () => {
-                var new_crypto_model = new Model_Database();
-                var tbl_table_indexes = new_crypto_model.map_tables['table indexes'];
-                var tbl_table_fields = new_crypto_model.map_tables['table fields'];
-                //console.log('tbl_table_indexes.records.arr_records', tbl_table_indexes.records.arr_records);
-                // records to array...
-
-                var fresh_arr_index_records = tbl_table_indexes.records.to_array();
-                var fresh_arr_field_records = tbl_table_fields.records.to_array();
-
-                // to_obj_array
-                //  
-                //console.log('fresh_arr_index_records', fresh_arr_index_records);
-                //throw 'stop';
-
-                // The assets-client itself should have more functionality that ensures the bittrex structure and records.
-                //  could have a get-ensure (/implicit get) or ensure function.
-
-                // Function to ensure the currencies.
-                //  Meanwhile check that the indexes have been done properly.
-
-                // Can have index lookup on the client side.
-                nldb_client.load_core((err, model_db) => {
-                    if (err) {
-                        throw err;
-                    } else {
-                        var table_names = model_db.table_names;
-
-                        var trl_table_indexes = model_db.get_table_records_length('table indexes');
-                        // Look into table fields first
-
-                        var check_table_fields = () => {
-                            var tbl_table_fields = model_db.map_tables['table fields'];
-                            console.log('tbl_table_fields.records.arr_records', tbl_table_fields.records.arr_records);
-                            // records to array...
-
-                            var arr_fields_records = tbl_table_fields.records.to_array();
-                            console.log('arr_fields_records', arr_fields_records);
-
-                            console.log('fresh_arr_field_records', fresh_arr_field_records);
-
-                            console.log('tbl_table_fields.id', tbl_table_fields.id);
-                        }
-                        //check_table_fields();
-
-                        var check_table_indexes = () => {
-                            var tbl_table_indexes = model_db.map_tables['table indexes'];
-                            console.log('tbl_table_indexes.records.arr_records', tbl_table_indexes.records.arr_records);
-                            // records to array...
-
-                            var arr_index_records = tbl_table_indexes.records.to_array();
-                            console.log('arr_index_records', arr_index_records);
-
-                            console.log('fresh_arr_index_records', fresh_arr_index_records);
-
-                            console.log('tbl_table_indexes.id', tbl_table_indexes.id);
-                        }
-
-                        throw 'stop';
-
-                        nldb_client.load_tables(['bittrex currencies', 'bittrex markets'], (err, res_load) => {
-                            if (err) {
-                                callback(err);
-                            } else {
-
-
-                                throw 'stop';
-
-                                var crypto_model_db = nldb_client.model;
-                                var tbl_currencies = crypto_model_db.map_tables['bittrex currencies'];
-                                //console.log('tbl_currencies.records.arr_records', tbl_currencies.records.arr_records);
-
-                                //console.log('tbl_currencies.field_names', tbl_currencies.field_names);
-                                var map_currencies = crypto_model_db.get_obj_map('bittrex currencies', 'Currency');
-                                console.log('map_currencies', map_currencies);
-
-                                var map_markets = crypto_model_db.get_obj_map('bittrex markets', 'MarketName');
-                                console.log('map_markets', map_markets);
-                                repeated_collect_market_summaries();
-
-                            }
-                        });
-                    }
-                });
-            }
-            //ctu_start();
-
             var counting_start = () => {
                 //console.log('counting current records');
 
@@ -433,8 +364,6 @@ if (require.main === module) {
 
                             }
                         });
-
-
                     }
                 });
             }
