@@ -361,7 +361,7 @@ if (require.main === module) {
 
                 // Could ensure DB components, using ensure_table, then ensure the records.
 
-                // console.log('counting current records');
+                //console.log('counting current records');
 
                 nldb_client.count_core((err, num_records) => {
                     console.log('num_records', num_records);
