@@ -15,6 +15,10 @@ var path = require('path');
 var Bittrex_Watcher = require('bittrex-watcher');
 
 var NextLevelDB_Model = require('nextleveldb-crypto-model');
+
+let Record_List = NextLevelDB_Model.Record_List;
+
+
 // Making a Crypto model could be neater?
 var Model_Database = NextLevelDB_Model.Database;
 var Model_Table = NextLevelDB_Model.Table;
@@ -92,7 +96,25 @@ if (require.main === module) {
     //  They will need to be batched up as records, and the Model will be useful for this.
 
     var bittrex_watcher = new Bittrex_Watcher();
+
+
     var server_data1 = config.nextleveldb_connections.localhost;
+
+    var config = require('my-config').init({
+        path: path.resolve('../../config/config.json') //,
+        //env : process.env['NODE_ENV']
+        //env : process.env
+    });
+
+    let access_token = config.nextleveldb_access.root[0];
+    console.log('access_token', access_token);
+    server_data1.access_token = access_token;
+
+
+    // Try collector on a remote server.
+
+
+
 
     /*
     console.log('server_data2', server_data2);
@@ -113,11 +135,39 @@ if (require.main === module) {
             throw err;
         } else {
 
+
+
+
+            var collect_daily_historic_bittrex_data = () => {
+                // Will collect the data, put it into the db.
+
+
+                // Want a fairly consistent server, keep it running.
+                //  bittrex market candles
+                // Ensure each row is in the db.
+
+                // Also, repeatedly getting trading data.
+                //  That way we would get all trades, cross-reference it with the stream of all trades.
+
+                // Will get the data going quite far back.
+
+
+
+
+
+
+            }
+
+
+
+
             var repeated_collect_market_summaries = () => {
 
                 // May need to reload the currencies.
 
                 var crypto_model_db = nldb_client.model;
+
+                // get_table_records
 
                 nldb_client.load_tables(['bittrex currencies', 'bittrex markets'], (err, res) => {
                     if (err) {
@@ -141,7 +191,7 @@ if (require.main === module) {
                         console.log('map_currencies', map_currencies);
                         //throw 'stop';
 
-                        // then get the map of markets by name
+                        // then get the map of markets by name.
 
                         var map_markets = crypto_model_db.get_obj_map('bittrex markets', 'MarketName');
                         //console.log('map_markets', map_markets);
@@ -149,157 +199,146 @@ if (require.main === module) {
                         var arr_markets = get_arr_from_truth_map(map_markets);
 
 
-
-                        var collect_filtered_market_summaries = () => {
-                            // config_all_bittrex
-                            //console.log('collect_filtered_market_summaries');
-                            // 
-                            //throw 'stop';
-
-                            bittrex_watcher.get_market_summaries_filter_by_arr_market_names(arr_markets, (err, at_market_summaries) => {
-                                // Could make it put the error in a log file, and continue.
-
-                                if (err) {
-                                    console.log('get market summaries err', err);
-                                } else {
-                                    //console.log('at_market_summaries', at_market_summaries);
-                                    // (Then create DB records out of these.)
-
-                                    //throw 'stop';
-                                    arr_market_summary_records = at_market_summaries.transform_each((value) => {
-                                        var str_market_name = value[0],
-                                            market_key = map_markets[str_market_name],
-                                            d = Date.parse(value[6] + 'Z');
-                                        console.log('str_market_name', str_market_name);
-                                        var res = [
-                                            [market_key, d],
-                                            [value[4], value[7], value[8], value[3], value[5], value[9], value[10]]
-                                        ];
-                                        return res;
-                                    });
-                                    //console.log('stopping');
-                                    //throw 'stop';
-
-                                    console.log('arr_market_summary_records', arr_market_summary_records);
-                                    console.log('arr_market_summary_records.length', arr_market_summary_records.length);
-
-                                    // then use the Model DB to encode all these records as binary buffer.
-
-                                    var tbl_bittrex_snapshots = crypto_model_db.map_tables['bittrex market summary snapshots'];
-                                    //console.log('tbl_bittrex_snapshots.key_prefix', tbl_bittrex_snapshots.key_prefix);
-                                    var buf_encoded_records = crypto_model_db.encode_table_model_rows('bittrex market summary snapshots', arr_market_summary_records);
-                                    console.log('buf_encoded_records.length', buf_encoded_records.length);
-                                    // then push these encoded records to the database.
-                                    console.log('pre put records');
-                                    throw 'stop';
-                                    nldb_client.ll_put_records_buffer(buf_encoded_records, (err, res_put) => {
-                                        if (err) {
-                                            throw err;
-                                        } else {
-                                            console.log('* res_put', res_put);
-
-                                            // not sure we really need these counts.
-
-                                            var show_record_counts = () => {
-                                                nldb_client.ll_count_records((err, num_records) => {
-                                                    if (err) {
-                                                        callback(err);
-                                                    } else {
-                                                        console.log('num_records', num_records);
-
-                                                        var kp = crypto_model_db.map_tables['bittrex market summary snapshots'].key_prefix;
-
-
-                                                        // Put / ensure a bittrex market record.
-                                                        //  It will do the lookups itself to make sure that we reference the correct items.
-
-                                                        // Also will check for existance of bittrex market records.
-
-                                                        // have something in the client to count table records by key prefix
-
-                                                        // Countring records in specific table will be faster, with maintained record counts in tables.
-                                                        //  Slowing down the normal record puts, to update the count.
-
-                                                        nldb_client.count_records_by_key_prefix(kp, (err, count) => {
-                                                            if (err) {
-                                                                throw err;
-                                                            } else {
-                                                                console.log('count', count);
-                                                                // Could get the table names from the db
-                                                                //  Could get table info including key prefixes
-
-                                                                // Could even have record counts?
-                                                                //  Some record counts take ages to do.
-                                                            }
-                                                        });
-                                                    }
-                                                });
-                                            }
-                                        }
-                                    });
-                                }
-                            });
-                        };
-                        // First need to ensure the DB markets are up to date.=
+                        let downloads_paused = false;
 
                         var collect_market_summaries = () => {
                             // config_all_bittrex
 
-                            bittrex_watcher.get_at_market_summaries((err, at_market_summaries) => {
-                                // Could make it put the error in a log file, and continue.
 
-                                if (err) {
-                                    console.log('get market summaries err', err);
-                                } else {
-                                    //console.log('at_market_summaries', at_market_summaries);
-                                    //throw 'stop';
-                                    // (Then create DB records out of these.)
-                                    arr_market_summary_records = at_market_summaries.transform_each((value) => {
-                                        var str_market_name = value[0],
-                                            market_key = map_markets[str_market_name],
-                                            d = Date.parse(value[6] + 'Z');
+                            if (!downloads_paused) {
+                                bittrex_watcher.get_at_market_summaries((err, at_market_summaries) => {
+                                    // Could make it put the error in a log file, and continue.
 
-                                        // Problem stemming from undefined market keys.
-                                        //  Need to properly ensure the bittrex markets and currencies when we load them
+                                    if (err) {
+                                        console.log('get market summaries err', err);
+                                    } else {
 
-                                        //console.log('market_key', market_key);
-                                        if (!market_key) {
-                                            throw 'Market ' + str_market_name + ' not found';
+
+                                        // Does every market referenced exist within the map?
+
+                                        // If it's not within the map, we need to create / ensure it.
+                                        //  Ensure would be nice to avoid race conditions if more than 1 client creates it at once.
+
+                                        // Server side ensure record would be very useful
+                                        //  especially when the server generates the key, if we get the record sent to the db from more than one place, it only puts one copy into the database,
+                                        //  and sends back the record complete with its new ID (or just sends back the new ID)
+
+                                        // A lower level ensure record function would be useful.
+                                        //  It creates the record according to the model, but checks it against all ids.
+                                        //   May need to search the whole table when ID is not known?
+                                        //   Or use an index to look up a field, should be unique, could make sure of that for the moment, but consulting the index could be enough
+                                        //    to check if the record exists enough, and get it's ID, or put the record with a new ID.
+
+                                        // ensure_record would work differently on an autoincrementing (or server generated id) table.
+
+
+
+                                        //console.log('at_market_summaries', at_market_summaries);
+                                        //throw 'stop';
+                                        // (Then create DB records out of these.)
+                                        arr_market_summary_records = at_market_summaries.transform_each((value) => {
+                                            var str_market_name = value[0],
+                                                market_key = map_markets[str_market_name],
+                                                d = Date.parse(value[6] + 'Z'),
+                                                res;
+
+                                            // Problem stemming from undefined market keys.
+                                            //  Need to properly ensure the bittrex markets and currencies when we load them
+
+                                            //console.log('market_key', market_key);
+                                            if (!market_key) {
+
+                                                downloads_paused = true;
+
+
+                                                // Don't want to throw error here. Want to get the data loaded.
+
+                                                nldb_client.ensure_bittrex_structure_current((err, res) => {
+                                                    if (err) {
+                                                        throw err;
+                                                    } else {
+                                                        console.log('cb ensure_bittrex_structure_current after adding currency / market');
+
+                                                        downloads_paused = false;
+
+                                                    }
+                                                })
+
+
+
+
+                                                //throw 'Market ' + str_market_name + ' not found';
+                                            } else {
+                                                res = [
+                                                    [market_key, d],
+                                                    [value[4], value[7], value[8], value[3], value[5], value[9], value[10]]
+                                                ];
+                                            }
+
+                                            return res;
+                                        });
+
+                                        var tbl_bittrex_snapshots = crypto_model_db.map_tables['bittrex market summary snapshots'];
+                                        //console.log('tbl_bittrex_snapshots.key_prefix', tbl_bittrex_snapshots.key_prefix);
+
+                                        // client.put_table_records ...
+                                        //  That would be a friendlier way of doing it.
+                                        //   Encodes the records, then does the ll put
+                                        //    Nice if it returned the keys of the put records once the puts have been confirmed.
+                                        //     Could have a confirm put option?
+                                        //      The DB could even do a get after the put to test its there? Overkill maybe.
+
+
+                                        if (arr_market_summary_records) {
+                                            var buf_encoded_records = crypto_model_db.encode_table_model_rows('bittrex market summary snapshots', arr_market_summary_records);
+
+                                            // Could also try with a Record_List.
+
+                                            // Decoding the records within Record_List seems valuable.
+
+                                            // To test:
+
+                                            // OK, Record_List seems to work.
+                                            //  Not sure how well it will work with automatic message parsing.
+                                            //  May have a few exceptions / special cases / workarounds there.
+                                            //  Just need to get the records parsed, as reliably as possible.
+
+
+                                            // put buf_encoded_records within a Record_List, try to decode it.
+
+                                            //let rl = new Record_List(buf_encoded_records);
+
+                                            //console.log('rl', rl);
+                                            //console.log('rl.decoded', rl.decoded);
+
+                                            //let rl2 = new Record_List(rl.decoded);
+                                            //console.log('rl2.decoded', rl2.decoded);
+
+                                            nldb_client.ll_put_records_buffer(buf_encoded_records, (err, res_put) => {
+                                                if (err) {
+                                                    throw err;
+                                                } else {
+                                                    var d = new Date();
+                                                    var n = d.toLocaleTimeString();
+
+                                                    console.log('put ' + buf_encoded_records.length + ' bytes @' + n, res_put);
+
+                                                    // not sure we really need these counts.
+                                                }
+                                            });
                                         }
-                                        var res = [
-                                            [market_key, d],
-                                            [value[4], value[7], value[8], value[3], value[5], value[9], value[10]]
-                                        ];
-                                        return res;
-                                    });
 
-                                    var tbl_bittrex_snapshots = crypto_model_db.map_tables['bittrex market summary snapshots'];
-                                    //console.log('tbl_bittrex_snapshots.key_prefix', tbl_bittrex_snapshots.key_prefix);
 
-                                    // client.put_table_records ...
-                                    //  That would be a friendlier way of doing it.
-                                    //   Encodes the records, then does the ll put
-                                    //    Nice if it returned the keys of the put records once the puts have been confirmed.
-                                    //     Could have a confirm put option?
-                                    //      The DB could even do a get after the put to test its there? Overkill maybe.
+                                    }
+                                });
+                            }
 
-                                    var buf_encoded_records = crypto_model_db.encode_table_model_rows('bittrex market summary snapshots', arr_market_summary_records);
-                                    nldb_client.ll_put_records_buffer(buf_encoded_records, (err, res_put) => {
-                                        if (err) {
-                                            throw err;
-                                        } else {
-                                            var d = new Date();
-                                            var n = d.toLocaleTimeString();
 
-                                            console.log('put ' + buf_encoded_records.length + ' bytes @' + n, res_put);
 
-                                            // not sure we really need these counts.
-                                        }
-                                    });
-                                }
-                            });
                         };
                         collect_market_summaries();
+
+
                         setInterval(collect_market_summaries, delay);
 
 
