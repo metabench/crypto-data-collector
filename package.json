@@ -4,15 +4,15 @@
     "license": "MIT",
     "dependencies": {
         "arr-kv-table": "^0.0.1",
-        "bittrex-watcher": "^0.0.5",
+        "bittrex-watcher": "^0.0.9",
         "float64-kv-table": "^0.0.2",
         "lang-mini": "^0.0.5",
-        "moment": "^2.20.1",
+        "moment": "^2.22.2",
         "my-config": "^2.0.0",
-        "nextleveldb-assets-client": "^0.0.35",
-        "nextleveldb-crypto-model": "^0.0.21",
-        "request": "^2.85.0",
-        "xas2": "^0.0.12"
+        "nextleveldb-assets-client": "^0.0.43",
+        "nextleveldb-crypto-model": "^0.0.22",
+        "request": "^2.87.0",
+        "xas2": "^0.0.17"
     },
     "engines": {
         "node": ">=6.5.0"
@@ -23,5 +23,5 @@
         "type": "git",
         "url": "https://github.com/metabench/crypto-data-collector.git"
     },
-    "version": "0.0.15"
+    "version": "0.0.21"
 }
